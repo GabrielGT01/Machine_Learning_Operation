@@ -1,0 +1,22 @@
+
+##write schema for the data type to compare later
+
+columns:
+- lpep_pickup_datetime: datetime64[us]
+- lpep_dropoff_datetime: datetime64[us]
+- PULocationID: object 
+- DOLocationID: object 
+- trip_distance: float64
+
+
+numerical_columns:
+
+- trip_distance: float64 
+
+
+
+categorical_columns:
+- DOLocationID: object 
+- PULocationID: object
+
+
