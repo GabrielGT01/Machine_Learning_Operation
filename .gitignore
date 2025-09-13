@@ -1,0 +1,21 @@
+<<<<<<< HEAD
+*.ipynb_checkpoints
+=======
+.git
+.env
+>>>>>>> 58669b1487d86e90a37734f88fb829c8627e87d1
+.DS_Store
+airflow_settings.yaml
+__pycache__/
+astro
+.venv
+airflow-webserver.pid
+webserver_config.py
+airflow.cfg
+airflow.db
+<<<<<<< HEAD
+.astro
+=======
+*.ipynb_checkpoints
+.DS_Store
+>>>>>>> 58669b1487d86e90a37734f88fb829c8627e87d1
