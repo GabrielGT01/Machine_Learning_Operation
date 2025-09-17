@@ -13,9 +13,9 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: testdockerkrish.azurecr.io
-  IMAGE_NAME: trip-duration-api
-  APP_NAME: tripdurationminute
+  REGISTRY: tripdurationimage.azurecr.io
+  IMAGE_NAME: durationcalculate
+  APP_NAME: trip-duration-minute
 
 jobs:
   # Continuous Integration
