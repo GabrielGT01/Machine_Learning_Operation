@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trip Duration Predictor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root { --primary:#007BFF; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            padding: 20px;
+        }
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 560px;
+            margin: auto;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+        }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid .full { grid-column: 1 / -1; }
+        label { display:block; font-weight:600; margin-bottom:6px; }
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d6dae1;
+            border-radius: 8px;
+            background:#fff;
+        }
+        button {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover { background: #0056b3; }
+        .result {
+            margin-top: 20px;
+            background: #e6f7ff;
+            padding: 12px;
+            border-left: 4px solid var(--primary);
+            border-radius: 6px;
+        }
+        .subtitle { color:#566; margin-top:-6px; margin-bottom:18px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Trip Duration Predictor</h2>
+        <p class="subtitle">Enter ride details and submit to get the predicted duration (minutes).</p>
+
+        <form method="post">
+            <div class="grid">
+                <div>
+                    <label for="passenger_count">Passenger Count</label>
+                    <input type="number" id="passenger_count" name="passenger_count" step="1" min="0" required placeholder="e.g., 1">
+                </div>
+
+                <div>
+                    <label for="trip_distance">Trip Distance (miles)</label>
+                    <input type="number" id="trip_distance" name="trip_distance" step="0.01" min="0" required placeholder="e.g., 4.12">
+                </div>
+
+                <div>
+                    <label for="fare_amount">Fare Amount ($)</label>
+                    <input type="number" id="fare_amount" name="fare_amount" step="0.01" required placeholder="e.g., 21.20">
+                </div>
+
+                <div>
+                    <label for="total_amount">Total Amount ($)</label>
+                    <input type="number" id="total_amount" name="total_amount" step="0.01" required placeholder="e.g., 36.77">
+                </div>
+
+                <div>
+                    <label for="PULocationID">PU Location ID</label>
+                    <input type="number" id="PULocationID" name="PULocationID" step="1" min="0" required placeholder="e.g., 171">
+                </div>
+
+                <div>
+                    <label for="DOLocationID">DO Location ID</label>
+                    <input type="number" id="DOLocationID" name="DOLocationID" step="1" min="0" required placeholder="e.g., 73">
+                </div>
+
+                <div class="full" style="display:flex; justify-content:flex-end;">
+                    <button type="submit">Predict Duration</button>
+                </div>
+            </div>
+        </form>
+
+        {% if result %}
+        <div class="result">
+            <strong>Prediction:</strong> {{ result }} minutes
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
