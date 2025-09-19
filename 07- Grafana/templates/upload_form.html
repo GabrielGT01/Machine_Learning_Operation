@@ -1,0 +1,348 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Batch Trip Duration — CSV Upload</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0f172a;            /* slate-900 */
+      --muted:#9ca3af;         /* gray-400 */
+      --text:#e5e7eb;          /* gray-200 */
+      --primary:#4f46e5;       /* indigo-600 */
+      --primary-2:#6366f1;     /* indigo-500 */
+      --accent:#22d3ee;        /* cyan-400 */
+      --ok:#16a34a;            /* green-600 */
+      --warn:#f59e0b;          /* amber-500 */
+      --err:#ef4444;           /* red-500 */
+      --panel: rgba(2,6,23,.4);
+      --border: 1px solid rgba(255,255,255,.06);
+      --shadow: 0 20px 60px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.02);
+      --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; padding:32px;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(79,70,229,.20), transparent 60%),
+        radial-gradient(900px 500px at 100% 0, rgba(34,211,238,.14), transparent 60%),
+        var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--text);
+      line-height:1.5;
+    }
+    .container{
+      max-width: 880px; margin: 0 auto;
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border: var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(6px);
+    }
+    header{ display:flex; align-items:flex-start; gap:16px; margin-bottom: 18px; }
+    .logo{
+      width:44px;height:44px;border-radius:12px;
+      background: radial-gradient(120% 120% at 30% 30%, var(--accent), var(--primary));
+      box-shadow: 0 10px 30px rgba(99,102,241,.35), inset 0 0 10px rgba(255,255,255,.25);
+    }
+    h1{ margin:0; font-size: clamp(1.25rem, 1rem + 1.2vw, 1.9rem); letter-spacing:.2px;}
+    .subtitle{ margin: 6px 0 0; color:var(--muted); font-size:.98rem}
+    .grid{ display:grid; grid-template-columns: 1.4fr .9fr; gap:24px; }
+    @media (max-width: 880px){ .grid{ grid-template-columns: 1fr; } }
+
+    .card{
+      background: var(--panel);
+      border: var(--border);
+      border-radius: 14px; padding: 18px;
+    }
+    .label{ font-weight:600; margin-bottom:8px; display:block; }
+
+    /* Dropzone */
+    .drop{
+      border: 2px dashed rgba(99,102,241,.45);
+      border-radius: 14px;
+      padding: 28px;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:10px; text-align:center;
+      transition:.2s ease;
+      background: rgba(99,102,241,.06);
+    }
+    .drop.dragover{
+      border-color: var(--accent);
+      background: rgba(34,211,238,.10);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 30px rgba(34,211,238,.15);
+    }
+    .hint{ color:var(--muted); font-size:.96rem }
+    .code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: rgba(2,6,23,.7); border: var(--border);
+      padding:6px 8px; border-radius:8px;
+    }
+
+    .meta{ display:grid; gap:10px; margin-top: 10px; font-size:.95rem; color:var(--muted); }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      background: rgba(255,255,255,.06);
+      padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.07);
+      color:#e8e9ee;
+    }
+
+    .controls{ display:flex; gap:12px; align-items:center; justify-content:flex-end; margin-top: 14px; }
+
+    button{
+      appearance:none; border:none; cursor:pointer;
+      background: linear-gradient(180deg, var(--primary), var(--primary-2));
+      color:#fff; font-weight:700; letter-spacing:.2px;
+      padding: 12px 18px; border-radius:12px; box-shadow: 0 10px 30px rgba(79,70,229,.35);
+      transition: .18s ease;
+    }
+    button:hover{ transform: translateY(-1px); }
+    button:disabled{ opacity:.55; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    /* Status / notifications */
+    .status{ margin-top: 12px; padding: 10px 12px; border-radius: 10px; border:1px solid transparent; display:flex; align-items:center; gap:10px; }
+    .status.ok{ border-color: rgba(22,163,74,.35); background: rgba(22,163,74,.12); }
+    .status.warn{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.12); }
+    .status.err{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.12); }
+    .status .dot{ width:10px; height:10px; border-radius:50%; background: currentColor; }
+    .ok .dot{ color: var(--ok); } .warn .dot{ color: var(--warn); } .err .dot{ color: var(--err); }
+
+    /* Spinner */
+    .spinner{ width:16px; height:16px; border:2px solid rgba(255,255,255,.25); border-top-color:#fff; border-radius:50%; animation:spin .9s linear infinite; display:inline-block; margin-right:6px; }
+    @keyframes spin{ to { transform: rotate(360deg); } }
+
+    ul.req{ margin:8px 0 0 18px; }
+    .small{ font-size:.92rem; color:var(--muted); }
+
+    /* Download area */
+    .download-area{ display:none; margin-top:14px; justify-content:space-between; align-items:center; gap:12px; }
+    .filename{ font-size:.95rem; color:#dbe3ff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>Batch Trip Duration — CSV Upload</h1>
+        <p class="subtitle">Upload your dataset and get a CSV back with an extra <span class="code">predicted_duration</span> column.</p>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Left: Uploader -->
+      <div class="card">
+        <form id="upload-form" action="/predict_csv" method="post" enctype="multipart/form-data">
+          <label class="label" for="file">Your CSV file</label>
+
+          <!-- Drop area -->
+          <div id="drop" class="drop" tabindex="0">
+            <div>
+              <strong>Drag & drop</strong> your file here<br/>
+              <span class="hint">or click to choose a file</span>
+            </div>
+            <input id="file" name="file" type="file" accept=".csv,text/csv" style="display:none" required />
+          </div>
+
+          <div class="meta" id="file-meta" style="display:none">
+            <div class="pill" id="meta-name">name.csv</div>
+            <div class="pill" id="meta-size">0 KB</div>
+            <div class="pill">Required columns:
+              <span class="code">passenger_count, trip_distance, fare_amount, total_amount, PULocationID, DOLocationID, duration</span>
+            </div>
+          </div>
+
+          <div class="status warn" id="status" style="display:none">
+            <span class="dot"></span>
+            <span id="status-text">Waiting for a file…</span>
+          </div>
+
+          <div class="download-area" id="download-area">
+            <span class="filename" id="dl-filename"></span>
+            <a id="download-link" href="#" download>
+              <button type="button" id="download-btn">Download result</button>
+            </a>
+          </div>
+
+          <div class="controls">
+            <button id="submit-btn" type="submit" disabled>Run Batch Prediction</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Right: Help / Notes (no cURL block) -->
+      <aside class="card">
+        <h3 style="margin-top:0">Format requirements</h3>
+        <p class="small">Your CSV must include these headers (order doesn’t matter):</p>
+        <ul class="req">
+          <li><code class="code">passenger_count</code></li>
+          <li><code class="code">trip_distance</code></li>
+          <li><code class="code">fare_amount</code></li>
+          <li><code class="code">total_amount</code></li>
+          <li><code class="code">PULocationID</code></li>
+          <li><code class="code">DOLocationID</code></li>
+          <li><code class="code">duration</code> <span class="small">(present in file; not used for inference)</span></li>
+        </ul>
+        <p class="small" style="margin-top:12px">
+          Tip: Large files are processed in chunks server-side to keep memory low.
+        </p>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // ---- Config
+    const REQUIRED = ["passenger_count","trip_distance","fare_amount","total_amount","PULocationID","DOLocationID","duration"]
+      .map(h => h.toLowerCase());
+
+    // ---- Elements
+    const drop = document.getElementById('drop');
+    const fileInput = document.getElementById('file');
+    const meta = document.getElementById('file-meta');
+    const metaName = document.getElementById('meta-name');
+    const metaSize = document.getElementById('meta-size');
+    const statusBox = document.getElementById('status');
+    const statusText = document.getElementById('status-text');
+    const submitBtn = document.getElementById('submit-btn');
+    const form = document.getElementById('upload-form');
+    const dlArea = document.getElementById('download-area');
+    const dlLink = document.getElementById('download-link');
+    const dlBtn = document.getElementById('download-btn');
+    const dlName = document.getElementById('dl-filename');
+
+    // ---- Helpers
+    function humanSize(bytes){
+      const units=['B','KB','MB','GB']; let i=0, n=bytes;
+      while(n>=1024 && i<units.length-1){ n/=1024; i++; }
+      return `${n.toFixed(n<10 && i>0?1:0)} ${units[i]}`;
+    }
+    function showStatus(text, type){
+      statusBox.style.display = 'flex';
+      statusBox.className = 'status ' + (type||'');
+      statusText.innerHTML = text;
+    }
+    function enableSubmit(ok){ submitBtn.disabled = !ok; }
+    function pickFile(){ fileInput.click(); }
+
+    function parseFilenameFromDisposition(dispo){
+      if(!dispo) return null;
+      const m = /filename\*?=(?:UTF-8''|")?([^\";]+)/i.exec(dispo);
+      if(m && m[1]){
+        try { return decodeURIComponent(m[1].replace(/"/g,'')); } catch{ return m[1].replace(/"/g,''); }
+      }
+      return null;
+    }
+
+    function handleFiles(files){
+      dlArea.style.display = 'none';
+      if(!files || !files.length) return;
+      const f = files[0];
+      fileInput.files = files;
+      meta.style.display = 'grid';
+      metaName.textContent = f.name;
+      metaSize.textContent = humanSize(f.size);
+
+      // Validate headers by reading the first line
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{
+          const text = reader.result;
+          const firstLine = (text.split(/\r?\n/)[0] || '').trim();
+          const headers = firstLine.split(',').map(h => h.trim().replace(/^"|"$/g,'').toLowerCase());
+          const missing = REQUIRED.filter(r => !headers.includes(r));
+          if(missing.length){
+            showStatus(`Missing required columns: <b>${missing.join(', ')}</b>`, 'err');
+            enableSubmit(false);
+          }else{
+            showStatus('File looks good. Click <b>Run Batch Prediction</b> to start.', 'ok');
+            enableSubmit(true);
+          }
+        }catch(e){
+          showStatus('Could not read CSV header. You can still try to upload.', 'warn');
+          enableSubmit(true);
+        }
+      };
+      const blob = f.slice(0, 32768); // read ~first 32KB
+      reader.readAsText(blob);
+    }
+
+    // ---- Drag & Drop wiring
+    ['dragenter','dragover'].forEach(evt =>
+      drop.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); drop.classList.add('dragover'); })
+    );
+    ['dragleave','drop'].forEach(evt =>
+      drop.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); drop.classList.remove('dragover'); })
+    );
+    drop.addEventListener('click', pickFile);
+    drop.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+    fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+    // ---- Submit via fetch to get a Blob (so we can notify + provide a Download button)
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      if(!fileInput.files || !fileInput.files.length){
+        showStatus('Please choose a CSV file first.', 'err');
+        return;
+      }
+
+      enableSubmit(false);
+      dlArea.style.display = 'none';
+      showStatus('<span class="spinner"></span>Uploading and processing… This may take a moment.', 'warn');
+
+      try{
+        const fd = new FormData(form);
+        const res = await fetch('/predict_csv', { method:'POST', body: fd });
+
+        if(!res.ok){
+          // Try to get JSON error
+          let msg = `Server error (${res.status})`;
+          try{
+            const data = await res.json();
+            if(data && data.detail) msg = data.detail;
+          }catch(_){}
+          showStatus(`Processing failed: <b>${msg}</b>`, 'err');
+          enableSubmit(true);
+          return;
+        }
+
+        // Success: turn the response into a Blob and prepare download
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+
+        // Try to extract a filename from headers; fallback to input name + suffix
+        const dispo = res.headers.get('Content-Disposition') || res.headers.get('content-disposition');
+        let fname = parseFilenameFromDisposition(dispo);
+        if(!fname){
+          const inName = fileInput.files[0].name || 'predictions.csv';
+          const base = inName.replace(/\.csv$/i,'');
+          fname = `${base}_with_predictions.csv`;
+        }
+
+        dlLink.href = url;
+        dlLink.download = fname;
+        dlName.textContent = fname;
+        dlArea.style.display = 'flex';
+
+        showStatus('Done! Your download should start automatically. If not, click the button.', 'ok');
+
+        // Auto-start the download once
+        setTimeout(() => dlBtn.click(), 300);
+
+        // Re-enable the submit button (to allow another run)
+        enableSubmit(true);
+
+        // Clean up the object URL after a while
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+
+      }catch(err){
+        showStatus(`Unexpected error: <b>${String(err)}</b>`, 'err');
+        enableSubmit(true);
+      }
+    });
+  </script>
+</body>
+</html>
